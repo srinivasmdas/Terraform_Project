@@ -39,7 +39,7 @@ resource "local_file" "ip" {
 
 resource "aws_ebs_volume" "project_ebs"{
   availability_zone =  aws_instance.project_instance.availability_zone
-  size              = 10
+  size              = 5
   tags = {
     Name = "myterraebs"
   }
@@ -68,8 +68,8 @@ depends_on = [aws_instance.project_instance]
  
   provisioner "remote-exec" {
     inline = [
-        "sudo mkdir -p /opt/ansi-terraform",
-        "sudo chmod 777 /opt/ansi-terraform",
+        "sudo mkdir -p /opt/ansi-terraform/",
+        "sudo chmod 777 /opt/ansi-terraform/",
          
   ]
   }
@@ -87,6 +87,11 @@ depends_on = [aws_instance.project_instance]
   provisioner "file" {
     source      = "ansible.cfg"
     destination = "/opt/ansi-terraform/ansible.cfg"
+    }
+
+  provisioner "file" {
+    source      = "mykey"
+    destination = "/opt/ansi-terraform/mykey"
     }
 }
 
@@ -113,7 +118,8 @@ depends_on = [aws_volume_attachment.ebs_att]
     
     inline = [
         "cd /opt/ansi-terraform/",
-	"ansible-playbook -i ${aws_instance.project_instance.public_ip}, /opt/ansi-terraform/install_software.yml"
+	"ansible-playbook -i ${aws_instance.project_instance.public_ip} /opt/ansi-terraform/install_software.yml --ssh-common-args='-o StrictHostKeyChecking=no'"
+
     ]
    }
 }
