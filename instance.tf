@@ -78,6 +78,16 @@ depends_on = [aws_instance.project_instance]
     source      = "ip.txt"
     destination = "/opt/ansi-terraform/ip.txt"
   		   }
+
+  provisioner "file" {
+    source      = "install_software.yml"
+    destination = "/opt/ansi-terraform/install_software.yml"
+    }
+
+  provisioner "file" {
+    source      = "ansible.cfg"
+    destination = "/opt/ansi-terraform/ansible.cfg"
+    }
 }
 
 resource "null_resource" "nullremote2" {
@@ -94,7 +104,7 @@ depends_on = [aws_volume_attachment.ebs_att]
   provisioner "remote-exec" {
     
     inline = [
-        "sudo chown -R root: /opt/ansi-terraform/",
+        "sudo chown -R ec2-user: /opt/ansi-terraform/",
 	"cd /opt/ansi-terraform/"
        ]
     }
@@ -102,7 +112,8 @@ depends_on = [aws_volume_attachment.ebs_att]
   provisioner "remote-exec" {
     
     inline = [
-	"ansible-playbook install_software.yaml"
+        "cd /opt/ansi-terraform/",
+	"ansible-playbook -i ${aws_instance.project_instance.public_ip}, /opt/ansi-terraform/install_software.yml"
     ]
    }
 }
