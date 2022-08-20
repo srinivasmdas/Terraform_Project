@@ -1,10 +1,6 @@
 - name: playbook for terraform and ansible
   hosts: all
 
-  tasks:
-  - name: Install Python
-      raw: yum -y install python
-
   - name: Update APT package manager repositories cache
       become: true
       apt:

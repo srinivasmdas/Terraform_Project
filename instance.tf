@@ -13,15 +13,15 @@ resource "aws_instance" "project_instance" {
 
   provisioner "remote-exec" {
      inline = [
-       "sudo apt install python -y",
-       "sudo apt install python-pip -y",
-       "sudo pip install ansible"
+       "sudo yum update -y",
+       "sudo amazon-linux-extras install ansible2 -y",
+       "sudo ansible --version"
       ]
   }
   connection {
     type        = "ssh"
     host        = self.public_ip
-    user        = "ubuntu"
+    user        = "ec2-user"
     #private_key = "${file("${var.PATH_TO_PRIVATE_KEY}")}"
     private_key = file(var.PATH_TO_PRIVATE_KEY)
     timeout     = "4m"
@@ -61,20 +61,22 @@ depends_on = [aws_instance.project_instance]
   connection {
     type        = "ssh"
     host        = aws_instance.project_instance.public_ip
-    user        = "ubuntu"
+    user        = "ec2-user"
     private_key = file(var.PATH_TO_PRIVATE_KEY)
     timeout     = "4m"
   }
  
   provisioner "remote-exec" {
     inline = [
-        "sudo mkdir -p /root/ansible_terraform/aws_instance/ && sudo chown ubuntu: /root/ansible_terraform/aws_instance/"
+        "sudo mkdir -p /opt/ansi-terraform",
+        "sudo chmod 777 /opt/ansi-terraform",
+         
   ]
   }
 
   provisioner "file" {
     source      = "ip.txt"
-    destination = "/root/ansible_terraform/aws_instance/ip.txt"
+    destination = "/opt/ansi-terraform/ip.txt"
   		   }
 }
 
@@ -83,16 +85,24 @@ depends_on = [aws_volume_attachment.ebs_att]
   connection {
     type        = "ssh"
     host        = aws_instance.project_instance.public_ip
-    user        = "ubuntu"
+    user        = "ec2-user"
     private_key = file(var.PATH_TO_PRIVATE_KEY)
     timeout     = "4m"
   }
+ 
+  
   provisioner "remote-exec" {
     
     inline = [
-        "sudo chown -R root: /root/ansible_terraform/aws_instance/",
-	"sudo cd /root/ansible_terraform/aws_instance/",
-	"sudo ansible-playbook install_software.yml"
-]
-}
+        "sudo chown -R root: /opt/ansi-terraform/",
+	"cd /opt/ansi-terraform/"
+       ]
+    }
+
+  provisioner "remote-exec" {
+    
+    inline = [
+	"ansible-playbook install_software.yaml"
+    ]
+   }
 }
