@@ -13,7 +13,7 @@ resource "aws_instance" "project_instance" {
 
   provisioner "remote-exec" {
      inline = [
-       "sudo yum update -y",
+       #"sudo yum update -y",
        "sudo amazon-linux-extras install ansible2 -y",
        "sudo ansible --version"
       ]
@@ -34,6 +34,7 @@ value = aws_instance.project_instance.public_ip
 
 resource "local_file" "ip" {
     content  = aws_instance.project_instance.public_ip
+    #content  = aws_instance.project_instance.private_ip
     filename = "ip.txt"
 }
 
@@ -73,6 +74,14 @@ depends_on = [aws_instance.project_instance]
          
   ]
   }
+ 
+  provisioner "remote-exec" {
+    
+    inline = [
+        "sudo chown -R ec2-user: /opt/ansi-terraform/",
+	"cd /opt/ansi-terraform/"
+       ]
+    }
 
   provisioner "file" {
     source      = "ip.txt"
@@ -93,33 +102,12 @@ depends_on = [aws_instance.project_instance]
     source      = "mykey"
     destination = "/opt/ansi-terraform/mykey"
     }
-}
-
-resource "null_resource" "nullremote2" {
-depends_on = [aws_volume_attachment.ebs_att]
-  connection {
-    type        = "ssh"
-    host        = aws_instance.project_instance.public_ip
-    user        = "ec2-user"
-    private_key = file(var.PATH_TO_PRIVATE_KEY)
-    timeout     = "4m"
-  }
- 
-  
-  provisioner "remote-exec" {
-    
-    inline = [
-        "sudo chown -R ec2-user: /opt/ansi-terraform/",
-	"cd /opt/ansi-terraform/"
-       ]
-    }
 
   provisioner "remote-exec" {
-    
     inline = [
         "cd /opt/ansi-terraform/",
-	"ansible-playbook -i ${aws_instance.project_instance.public_ip} /opt/ansi-terraform/install_software.yml --ssh-common-args='-o StrictHostKeyChecking=no'"
-
+	"ansible-playbook /opt/ansi-terraform/install_software.yml --ssh-common-args='-o StrictHostKeyChecking=no'"
     ]
    }
 }
+
